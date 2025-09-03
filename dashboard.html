@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fraud Detection ROI Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --primary: #4361ee;
+      --success: #06d6a0;
+      --danger: #ef476f;
+      --warning: #ffd166;
+      --dark: #1a1a2e;
+      --darker: #0d0d1a;
+      --light: #f8f9fa;
+      --card-bg: #16213e;
+      --header-bg: #0d0d1a;
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    
+    body {
+      background: linear-gradient(135deg, var(--darker) 0%, var(--dark) 100%);
+      color: var(--light);
+      min-height: 100vh;
+      padding: 20px;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+      padding: 20px;
+      background: var(--header-bg);
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    }
+    
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+    
+    .logo i {
+      font-size: 28px;
+      color: var(--primary);
+    }
+    
+    .logo h1 {
+      font-size: 24px;
+      font-weight: 600;
+    }
+    
+    .controls {
+      display: flex;
+      gap: 15px;
+    }
+    
+    .btn {
+      padding: 10px 20px;
+      border-radius: 8px;
+      border: none;
+      background: var(--card-bg);
+      color: var(--light);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.3s ease;
+    }
+    
+    .btn:hover {
+      background: var(--primary);
+      transform: translateY(-2px);
+    }
+    
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 25px;
+      margin-bottom: 30px;
+    }
+    
+    .card {
+      background: var(--card-bg);
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+      transition: transform 0.3s ease;
+    }
+    
+    .card:hover {
+      transform: translateY(-5px);
+    }
+    
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    
+    .card-title {
+      font-size: 18px;
+      font-weight: 600;
+    }
+    
+    .card-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(67, 97, 238, 0.2);
+      color: var(--primary);
+    }
+    
+    .stat-value {
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 5px;
+    }
+    
+    .stat-label {
+      font-size: 14px;
+      color: #a0a0b3;
+    }
+    
+    .trend {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 14px;
+      margin-top: 10px;
+    }
+    
+    .trend.up {
+      color: var(--success);
+    }
+    
+    .trend.down {
+      color: var(--danger);
+    }
+    
+    .chart-container {
+      position: relative;
+      height: 250px;
+      margin-top: 15px;
+    }
+    
+    .main-dashboard {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 25px;
+      margin-bottom: 30px;
+    }
+    
+    @media (max-width: 900px) {
+      .main-dashboard {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    .main-card {
+      grid-column: span 1;
+      background: var(--card-bg);
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    }
+    
+    .main-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    
+    .main-card-title {
+      font-size: 20px;
+      font-weight: 600;
+    }
+    
+    .main-card-icon {
+      width: 45px;
+      height: 45px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(67, 97, 238, 0.2);
+      color: var(--primary);
+    }
+    
+    .roi-gauge {
+      position: relative;
+      width: 200px;
+      height: 200px;
+      margin: 0 auto;
+    }
+    
+    .gauge-value {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+    }
+    
+    .gauge-value .value {
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--light);
+    }
+    
+    .gauge-value .label {
+      font-size: 14px;
+      color: #a0a0b3;
+    }
+    
+    .progress-container {
+      margin-top: 20px;
+    }
+    
+    .progress-label {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    
+    .progress-bar {
+      height: 10px;
+      width: 100%;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 5px;
+      overflow: hidden;
+    }
+    
+    .progress-fill {
+      height: 100%;
+      background: var(--primary);
+      border-radius: 5px;
+      transition: width 1s ease;
+    }
+    
+    .footer {
+      text-align: center;
+      margin-top: 40px;
+      color: #a0a0b3;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo">
+        <i class="fas fa-shield-alt"></i>
+        <h1>Fraud Detection ROI Dashboard</h1>
+      </div>
+      <div class="controls">
+        <button class="btn"><i class="fas fa-download"></i> Export</button>
+        <button class="btn"><i class="fas fa-cog"></i> Settings</button>
+      </div>
+    </header>
+    
+    <div class="dashboard-grid">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Recovered Value</div>
+          <div class="card-icon">
+            <i class="fas fa-dollar-sign"></i>
+          </div>
+        </div>
+        <div class="stat-value">$171,000</div>
+        <div class="stat-label">Total Recovered</div>
+        <div class="trend up">
+          <i class="fas fa-arrow-up"></i> 12.5% from last month
+        </div>
+      </div>
+      
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Operational Cost</div>
+          <div class="card-icon">
+            <i class="fas fa-money-bill-wave"></i>
+          </div>
+        </div>
+        <div class="stat-value">$7,300</div>
+        <div class="stat-label">Monthly Cost</div>
+        <div class="trend down">
+          <i class="fas fa-arrow-down"></i> 3.2% from last month
+        </div>
+      </div>
+      
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">ROI Ratio</div>
+          <div class="card-icon">
+            <i class="fas fa-chart-line"></i>
+          </div>
+        </div>
+        <div class="stat-value">23.42:1</div>
+        <div class="stat-label">Return on Investment</div>
+        <div class="trend up">
+          <i class="fas fa-arrow-up"></i> 5.7% from last month
+        </div>
+      </div>
+      
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Fraud Prevented</div>
+          <div class="card-icon">
+            <i class="fas fa-lock"></i>
+          </div>
+        </div>
+        <div class="stat-value">142</div>
+        <div class="stat-label">Cases This Month</div>
+        <div class="trend up">
+          <i class="fas fa-arrow-up"></i> 8.9% from last month
+        </div>
+      </div>
+    </div>
+    
+    <div class="main-dashboard">
+      <div class="main-card">
+        <div class="main-card-header">
+          <div class="main-card-title">Recovered vs Operational Cost</div>
+          <div class="main-card-icon">
+            <i class="fas fa-balance-scale"></i>
+          </div>
+        </div>
+        <div class="chart-container">
+          <canvas id="costChart"></canvas>
+        </div>
+      </div>
+      
+      <div class="main-card">
+        <div class="main-card-header">
+          <div class="main-card-title">ROI Tracker</div>
+          <div class="main-card-icon">
+            <i class="fas fa-bullseye"></i>
+          </div>
+        </div>
+        <div class="roi-gauge">
+          <canvas id="roiChart"></canvas>
+          <div class="gauge-value">
+            <div class="value">23.42:1</div>
+            <div class="label">Current ROI</div>
+          </div>
+        </div>
+        <div class="progress-container">
+          <div class="progress-label">
+            <span>Target: 10:1</span>
+            <span>234%</span>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill" style="width: 100%;"></div>
+          </div>
+        </div>
+        <p style="text-align: center; margin-top: 20px; font-size: 14px; color: #a0a0b3;">
+          Exceeding target by <span style="color: var(--success); font-weight: 600;">134%</span>
+        </p>
+      </div>
+    </div>
+    
+    <div class="footer">
+      <p>Last updated: October 28, 2023 | Data refreshes every 15 minutes</p>
+    </div>
+  </div>
+
+  <script>
+    // Data for the dashboard
+    const data = {
+      recovered_value: 171000.0,
+      operational_cost: 7300,
+      roi: 23.42,
+      target_roi: 10,
+      fraud_cases: 142,
+      trends: {
+        recovered: 12.5,
+        cost: -3.2,
+        roi: 5.7,
+        cases: 8.9
+      }
+    };
+    const ctx1 = document.getElementById("costChart").getContext("2d");
+    new Chart(ctx1, {
+      type: "bar",
+      data: {
+        labels: ["Recovered Value", "Operational Cost"],
+        datasets: [{
+          label: "USD ($)",
+          data: [data.recovered_value, data.operational_cost],
+          backgroundColor: ["#06d6a0", "#ef476f"],
+          borderRadius: 8,
+          borderWidth: 0
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: (tooltipItem) => `$${tooltipItem.raw.toLocaleString()}`
+            }
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            grid: {
+              color: 'rgba(255, 255, 255, 0.1)'
+            },
+            ticks: {
+              color: '#a0a0b3',
+              callback: function(value) {
+                return '$' + value.toLocaleString();
+              }
+            }
+          },
+          x: {
+            grid: {
+              display: false
+            },
+            ticks: {
+              color: '#a0a0b3'
+            }
+          }
+        }
+      }
+    });
+    const ctx2 = document.getElementById("roiChart").getContext("2d");
+    new Chart(ctx2, {
+      type: "doughnut",
+      data: {
+        labels: ["ROI Achieved", "Remaining to Target"],
+        datasets: [{
+          data: [data.roi, Math.max(0, data.target_roi)],
+          backgroundColor: ["#4361ee", "rgba(67, 97, 238, 0.2)"],
+          borderWidth: 0,
+          circumference: 180,
+          rotation: -90
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: "70%",
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: (tooltipItem) => {
+                return tooltipItem.label + ': ' + tooltipItem.raw.toFixed(2) + ':1';
+              }
+            }
+          }
+        }
+      }
+    });
+  </script>
+</body>
+</html>
