@@ -3,12 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Fraud Detection ROI Dashboard</title>
+  <title>Dynamic Fraud Detection ROI Dashboard</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     :root {
       --primary: #4361ee;
+      --primary-light: #6f86ff;
       --success: #06d6a0;
       --danger: #ef476f;
       --warning: #ffd166;
@@ -17,6 +18,7 @@
       --light: #f8f9fa;
       --card-bg: #16213e;
       --header-bg: #0d0d1a;
+      --gray: #a0a0b3;
     }
     
     * {
@@ -138,7 +140,7 @@
     
     .stat-label {
       font-size: 14px;
-      color: #a0a0b3;
+      color: var(--gray);
     }
     
     .trend {
@@ -230,7 +232,7 @@
     
     .gauge-value .label {
       font-size: 14px;
-      color: #a0a0b3;
+      color: var(--gray);
     }
     
     .progress-container {
@@ -261,8 +263,97 @@
     .footer {
       text-align: center;
       margin-top: 40px;
-      color: #a0a0b3;
+      color: var(--gray);
       font-size: 14px;
+    }
+
+    .refresh-indicator {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--primary);
+      font-size: 14px;
+      margin-top: 10px;
+    }
+
+    .refresh-indicator .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background-color: var(--success);
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0% { opacity: 1; }
+      50% { opacity: 0.5; }
+      100% { opacity: 1; }
+    }
+
+    .simulation-controls {
+      background: var(--card-bg);
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 30px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    }
+
+    .simulation-title {
+      font-size: 18px;
+      margin-bottom: 15px;
+      color: var(--light);
+    }
+
+    .slider-container {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .slider-wrapper {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .slider-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 14px;
+    }
+
+    .slider-name {
+      color: var(--gray);
+    }
+
+    .slider-value {
+      color: var(--light);
+      font-weight: 600;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      -webkit-appearance: none;
+      height: 8px;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.1);
+      outline: none;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--primary);
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    input[type="range"]::-webkit-slider-thumb:hover {
+      background: var(--primary-light);
+      transform: scale(1.1);
     }
   </style>
 </head>
@@ -274,10 +365,38 @@
         <h1>Fraud Detection ROI Dashboard</h1>
       </div>
       <div class="controls">
+        <button class="btn" id="refreshBtn"><i class="fas fa-sync-alt"></i> Refresh</button>
         <button class="btn"><i class="fas fa-download"></i> Export</button>
         <button class="btn"><i class="fas fa-cog"></i> Settings</button>
       </div>
     </header>
+
+    <div class="simulation-controls">
+      <h3 class="simulation-title">Model Output Simulation</h3>
+      <div class="slider-container">
+        <div class="slider-wrapper">
+          <div class="slider-label">
+            <span class="slider-name">Recovered Value</span>
+            <span class="slider-value" id="recoveredValueSliderLabel">$171,000</span>
+          </div>
+          <input type="range" id="recoveredValueSlider" min="50000" max="300000" step="1000" value="171000">
+        </div>
+        <div class="slider-wrapper">
+          <div class="slider-label">
+            <span class="slider-name">Operational Cost</span>
+            <span class="slider-value" id="operationalCostSliderLabel">$7,300</span>
+          </div>
+          <input type="range" id="operationalCostSlider" min="1000" max="20000" step="100" value="7300">
+        </div>
+        <div class="slider-wrapper">
+          <div class="slider-label">
+            <span class="slider-name">Fraud Cases Prevented</span>
+            <span class="slider-value" id="fraudCasesSliderLabel">142</span>
+          </div>
+          <input type="range" id="fraudCasesSlider" min="50" max="300" step="1" value="142">
+        </div>
+      </div>
+    </div>
     
     <div class="dashboard-grid">
       <div class="card">
@@ -287,10 +406,10 @@
             <i class="fas fa-dollar-sign"></i>
           </div>
         </div>
-        <div class="stat-value">$171,000</div>
+        <div class="stat-value" id="recoveredValue">$171,000</div>
         <div class="stat-label">Total Recovered</div>
-        <div class="trend up">
-          <i class="fas fa-arrow-up"></i> 12.5% from last month
+        <div class="trend up" id="recoveredTrend">
+          <i class="fas fa-arrow-up"></i> <span id="recoveredTrendValue">12.5%</span> from last month
         </div>
       </div>
       
@@ -301,10 +420,10 @@
             <i class="fas fa-money-bill-wave"></i>
           </div>
         </div>
-        <div class="stat-value">$7,300</div>
+        <div class="stat-value" id="operationalCost">$7,300</div>
         <div class="stat-label">Monthly Cost</div>
-        <div class="trend down">
-          <i class="fas fa-arrow-down"></i> 3.2% from last month
+        <div class="trend down" id="costTrend">
+          <i class="fas fa-arrow-down"></i> <span id="costTrendValue">3.2%</span> from last month
         </div>
       </div>
       
@@ -315,10 +434,10 @@
             <i class="fas fa-chart-line"></i>
           </div>
         </div>
-        <div class="stat-value">23.42:1</div>
+        <div class="stat-value" id="roiValue">23.42:1</div>
         <div class="stat-label">Return on Investment</div>
-        <div class="trend up">
-          <i class="fas fa-arrow-up"></i> 5.7% from last month
+        <div class="trend up" id="roiTrend">
+          <i class="fas fa-arrow-up"></i> <span id="roiTrendValue">5.7%</span> from last month
         </div>
       </div>
       
@@ -329,10 +448,10 @@
             <i class="fas fa-lock"></i>
           </div>
         </div>
-        <div class="stat-value">142</div>
+        <div class="stat-value" id="fraudCases">142</div>
         <div class="stat-label">Cases This Month</div>
-        <div class="trend up">
-          <i class="fas fa-arrow-up"></i> 8.9% from last month
+        <div class="trend up" id="casesTrend">
+          <i class="fas fa-arrow-up"></i> <span id="casesTrendValue">8.9%</span> from last month
         </div>
       </div>
     </div>
@@ -348,6 +467,10 @@
         <div class="chart-container">
           <canvas id="costChart"></canvas>
         </div>
+        <div class="refresh-indicator">
+          <div class="dot"></div>
+          <span>Live data updating</span>
+        </div>
       </div>
       
       <div class="main-card">
@@ -360,122 +483,249 @@
         <div class="roi-gauge">
           <canvas id="roiChart"></canvas>
           <div class="gauge-value">
-            <div class="value">23.42:1</div>
+            <div class="value" id="gaugeValue">23.42:1</div>
             <div class="label">Current ROI</div>
           </div>
         </div>
         <div class="progress-container">
           <div class="progress-label">
-            <span>Target: 10:1</span>
-            <span>234%</span>
+            <span>Target: <span id="targetRoi">10:1</span></span>
+            <span id="targetPercent">234%</span>
           </div>
           <div class="progress-bar">
-            <div class="progress-fill" style="width: 100%;"></div>
+            <div class="progress-fill" id="progressFill" style="width: 100%;"></div>
           </div>
         </div>
-        <p style="text-align: center; margin-top: 20px; font-size: 14px; color: #a0a0b3;">
-          Exceeding target by <span style="color: var(--success); font-weight: 600;">134%</span>
+        <p style="text-align: center; margin-top: 20px; font-size: 14px; color: var(--gray);">
+          Exceeding target by <span id="exceedPercent" style="color: var(--success); font-weight: 600;">134%</span>
         </p>
       </div>
     </div>
     
     <div class="footer">
-      <p>Last updated: October 28, 2023 | Data refreshes every 15 minutes</p>
+      <p>Last updated: <span id="lastUpdated">October 28, 2023</span> | Data refreshes every <span id="refreshInterval">15</span> minutes</p>
     </div>
   </div>
 
   <script>
-    // Data for the dashboard
-    const data = {
-      recovered_value: 171000.0,
-      operational_cost: 7300,
-      roi: 23.42,
-      target_roi: 10,
-      fraud_cases: 142,
-      trends: {
-        recovered: 12.5,
-        cost: -3.2,
-        roi: 5.7,
-        cases: 8.9
+    // Global variables
+    let costChart, roiChart;
+    let currentData = {};
+    const TARGET_ROI = 10;
+
+    // Function to generate data based on model output
+    function generateData() {
+      // Get values from sliders (simulating model output)
+      const recovered_value = parseInt(document.getElementById('recoveredValueSlider').value);
+      const operational_cost = parseInt(document.getElementById('operationalCostSlider').value);
+      const fraud_cases = parseInt(document.getElementById('fraudCasesSlider').value);
+      
+      // Calculate ROI
+      const roi = recovered_value / operational_cost;
+      
+      // Generate trends (these would come from your model in a real scenario)
+      const recovered_trend = 12.5 + (Math.random() * 2 - 1);
+      const cost_trend = -3.2 + (Math.random() * 2 - 1);
+      const roi_trend = 5.7 + (Math.random() * 2 - 1);
+      const cases_trend = 8.9 + (Math.random() * 2 - 1);
+      
+      return {
+        recovered_value,
+        operational_cost,
+        roi,
+        target_roi: TARGET_ROI,
+        fraud_cases,
+        trends: {
+          recovered: recovered_trend,
+          cost: cost_trend,
+          roi: roi_trend,
+          cases: cases_trend
+        }
+      };
+    }
+
+    // Function to update the UI with new data
+    function updateDashboard(data) {
+      // Update the data cards
+      document.getElementById('recoveredValue').textContent = `$${formatNumber(data.recovered_value)}`;
+      document.getElementById('operationalCost').textContent = `$${formatNumber(data.operational_cost)}`;
+      document.getElementById('roiValue').textContent = `${data.roi.toFixed(2)}:1`;
+      document.getElementById('fraudCases').textContent = data.fraud_cases;
+      
+      // Update trend values
+      document.getElementById('recoveredTrendValue').textContent = `${data.trends.recovered.toFixed(1)}%`;
+      document.getElementById('costTrendValue').textContent = `${Math.abs(data.trends.cost).toFixed(1)}%`;
+      document.getElementById('roiTrendValue').textContent = `${data.trends.roi.toFixed(1)}%`;
+      document.getElementById('casesTrendValue').textContent = `${data.trends.cases.toFixed(1)}%`;
+      
+      // Set trend directions
+      document.getElementById('recoveredTrend').className = `trend ${data.trends.recovered >= 0 ? 'up' : 'down'}`;
+      document.getElementById('costTrend').className = `trend ${data.trends.cost >= 0 ? 'up' : 'down'}`;
+      document.getElementById('roiTrend').className = `trend ${data.trends.roi >= 0 ? 'up' : 'down'}`;
+      document.getElementById('casesTrend').className = `trend ${data.trends.cases >= 0 ? 'up' : 'down'}`;
+      
+      // Update ROI gauge
+      document.getElementById('gaugeValue').textContent = `${data.roi.toFixed(2)}:1`;
+      
+      // Update progress bar
+      const roiPercent = (data.roi / TARGET_ROI) * 100;
+      const progressWidth = Math.min(100, roiPercent);
+      document.getElementById('progressFill').style.width = `${progressWidth}%`;
+      document.getElementById('targetPercent').textContent = `${Math.round(roiPercent)}%`;
+      
+      // Update exceed percentage
+      const exceedPercent = Math.max(0, ((data.roi - TARGET_ROI) / TARGET_ROI) * 100);
+      document.getElementById('exceedPercent').textContent = `${exceedPercent.toFixed(0)}%`;
+      
+      // Update charts
+      updateCharts(data);
+      
+      // Update last updated timestamp
+      document.getElementById('lastUpdated').textContent = new Date().toLocaleString();
+      
+      // Store current data
+      currentData = data;
+    }
+
+    // Function to update charts with new data
+    function updateCharts(data) {
+      // Update cost chart
+      if (costChart) {
+        costChart.data.datasets[0].data = [data.recovered_value, data.operational_cost];
+        costChart.update();
       }
-    };
-    const ctx1 = document.getElementById("costChart").getContext("2d");
-    new Chart(ctx1, {
-      type: "bar",
-      data: {
-        labels: ["Recovered Value", "Operational Cost"],
-        datasets: [{
-          label: "USD ($)",
-          data: [data.recovered_value, data.operational_cost],
-          backgroundColor: ["#06d6a0", "#ef476f"],
-          borderRadius: 8,
-          borderWidth: 0
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: { display: false },
-          tooltip: {
-            callbacks: {
-              label: (tooltipItem) => `$${tooltipItem.raw.toLocaleString()}`
-            }
-          }
+      
+      // Update ROI chart
+      if (roiChart) {
+        roiChart.data.datasets[0].data = [data.roi, Math.max(0, data.target_roi)];
+        roiChart.update();
+      }
+    }
+
+    // Function to format numbers with commas
+    function formatNumber(num) {
+      return num.toLocaleString('en-US', { maximumFractionDigits: 0 });
+    }
+
+    // Function to initialize charts
+    function initCharts() {
+      const ctx1 = document.getElementById("costChart").getContext("2d");
+      costChart = new Chart(ctx1, {
+        type: "bar",
+        data: {
+          labels: ["Recovered Value", "Operational Cost"],
+          datasets: [{
+            label: "USD ($)",
+            data: [currentData.recovered_value || 0, currentData.operational_cost || 0],
+            backgroundColor: ["#06d6a0", "#ef476f"],
+            borderRadius: 8,
+            borderWidth: 0
+          }]
         },
-        scales: {
-          y: {
-            beginAtZero: true,
-            grid: {
-              color: 'rgba(255, 255, 255, 0.1)'
-            },
-            ticks: {
-              color: '#a0a0b3',
-              callback: function(value) {
-                return '$' + value.toLocaleString();
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: (tooltipItem) => `$${tooltipItem.raw.toLocaleString()}`
               }
             }
           },
-          x: {
-            grid: {
-              display: false
+          scales: {
+            y: {
+              beginAtZero: true,
+              grid: {
+                color: 'rgba(255, 255, 255, 0.1)'
+              },
+              ticks: {
+                color: '#a0a0b3',
+                callback: function(value) {
+                  return '$' + value.toLocaleString();
+                }
+              }
             },
-            ticks: {
-              color: '#a0a0b3'
-            }
-          }
-        }
-      }
-    });
-    const ctx2 = document.getElementById("roiChart").getContext("2d");
-    new Chart(ctx2, {
-      type: "doughnut",
-      data: {
-        labels: ["ROI Achieved", "Remaining to Target"],
-        datasets: [{
-          data: [data.roi, Math.max(0, data.target_roi)],
-          backgroundColor: ["#4361ee", "rgba(67, 97, 238, 0.2)"],
-          borderWidth: 0,
-          circumference: 180,
-          rotation: -90
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        cutout: "70%",
-        plugins: {
-          legend: { display: false },
-          tooltip: {
-            callbacks: {
-              label: (tooltipItem) => {
-                return tooltipItem.label + ': ' + tooltipItem.raw.toFixed(2) + ':1';
+            x: {
+              grid: {
+                display: false
+              },
+              ticks: {
+                color: '#a0a0b3'
               }
             }
           }
         }
-      }
-    });
+      });
+
+      const ctx2 = document.getElementById("roiChart").getContext("2d");
+      roiChart = new Chart(ctx2, {
+        type: "doughnut",
+        data: {
+          labels: ["ROI Achieved", "Remaining to Target"],
+          datasets: [{
+            data: [currentData.roi || 0, Math.max(0, TARGET_ROI)],
+            backgroundColor: ["#4361ee", "rgba(67, 97, 238, 0.2)"],
+            borderWidth: 0,
+            circumference: 180,
+            rotation: -90
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: "70%",
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: (tooltipItem) => {
+                  return tooltipItem.label + ': ' + tooltipItem.raw.toFixed(2) + ':1';
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    // Function to refresh data
+    function refreshData() {
+      const newData = generateData();
+      updateDashboard(newData);
+    }
+
+    // Initialize the dashboard
+    function initDashboard() {
+      // Set up slider event listeners
+      document.getElementById('recoveredValueSlider').addEventListener('input', function() {
+        document.getElementById('recoveredValueSliderLabel').textContent = '$' + formatNumber(this.value);
+        refreshData();
+      });
+      
+      document.getElementById('operationalCostSlider').addEventListener('input', function() {
+        document.getElementById('operationalCostSliderLabel').textContent = '$' + formatNumber(this.value);
+        refreshData();
+      });
+      
+      document.getElementById('fraudCasesSlider').addEventListener('input', function() {
+        document.getElementById('fraudCasesSliderLabel').textContent = this.value;
+        refreshData();
+      });
+      
+      // Set up refresh button
+      document.getElementById('refreshBtn').addEventListener('click', refreshData);
+      
+      // Load initial data
+      const initialData = generateData();
+      updateDashboard(initialData);
+      
+      // Initialize charts
+      initCharts();
+    }
+
+    // Start the dashboard when the page loads
+    document.addEventListener('DOMContentLoaded', initDashboard);
   </script>
 </body>
 </html>
