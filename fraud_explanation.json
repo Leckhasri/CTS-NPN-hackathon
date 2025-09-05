@@ -1,0 +1,30 @@
+{
+    "claim_id": "CLM0000000001",
+    "provider_id": "PRV001253",
+    "fraud_score": 0.1914990246295929,
+    "predicted_label": "NON-FRAUD",
+    "feature_contributions": {
+        "claim_amount <= 1000.00": -1.4445,
+        "length_of_stay <= 5.00": 0.3402,
+        "patient_age <= 65": 0.1063,
+        "claim_duration": 0.0,
+        "procedure_code_encoded": 0.4216,
+        "diagnosis_code_encoded": 0.3477,
+        "gender_encoded": 0.0057,
+        "comorbidity_count": 0.0123,
+        "fraud_tendency": 0.0561,
+        "peer_avg_amount <= 1000.00": -0.0089,
+        "peer_std_amount <= 1000.00": 0.0004,
+        "peer_avg_los": -0.0801,
+        "peer_total_claims": 0.0
+    },
+    "metrics": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 1,
+        "avg_claim_value": -0.46298859948090226,
+        "personnel_cost": 5000,
+        "infra_cost": 1500,
+        "compliance_cost": 800
+    }
+}

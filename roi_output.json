@@ -1,5 +1,7 @@
 {
-    "recovered_value": 171000.0,
-    "operational_cost": 7300,
-    "roi": 23.42
+    "True Positives": 55,
+    "Average Claim Value": 1200.5,
+    "Recovered Amount": 66027.5,
+    "Total Cost": 7300,
+    "ROI": 8.044863013698631
 }
